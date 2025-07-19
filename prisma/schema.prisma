@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String         @id @default(cuid())
+  name        String?
+  email       String?        @unique
+  password    String?
+  phone       String?
+  role        Role           @default(USER)
+  otp         String?
+  verifyEmail Boolean        @default(false)
+  otpExpiry   DateTime
+  purchases   UserPurchase[]
+  session     Session[]
+  createAt    DateTime       @default(now())
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  sessionToken String?
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  expiresAt    DateTime
+}
+
+model UserPurchase {
+  User     User?   @relation(fields: [userId], references: [id])
+  userId   String
+  course   Course? @relation(fields: [courseId], references: [id])
+  courseId Int
+
+  @@id([userId, courseId])
+}
+
+model Course {
+  id             Int             @id @default(autoincrement())
+  title          String
+  description    String
+  imageUrl       String
+  slug           String
+  openToEveryone Boolean         @default(false)
+  content        CourseContent[]
+  UserPurchase   UserPurchase[]
+}
+
+model CourseContent {
+  course    Course?  @relation(fields: [courseId], references: [id])
+  courseId  Int
+  content   Content? @relation(fields: [contentId], references: [id])
+  contentId Int
+
+  @@id([contentId, courseId])
+}
+
+model Content {
+  id          Int             @id @default(autoincrement())
+  title       String
+  description String
+  thumbnail   String
+  parent      Content?        @relation("ContentToContent", fields: [parentId], references: [id])
+  parentId    Int
+  children    Content[]       @relation("ContentToContent")
+  courses     CourseContent[]
+  createdAt   DateTime        @default(now())
+}
+
+enum Role {
+  ADMIN
+  USER
+}

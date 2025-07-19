@@ -1,0 +1,25 @@
+# Node modules and build
+node_modules/
+.next/
+out/
+
+# Vercel
+.vercel/
+
+# Coverage
+coverage/
+
+# Logs
+*.log
+
+# Environment variables
+.env*
+.env.*
+
+# Git
+.git/
+
+# Ignore lock files (optional if not formatting them)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
