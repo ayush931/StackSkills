@@ -39,7 +39,7 @@ export const sendEmail = async ({
   } catch (error) {
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Failed to send email'
+      message: error instanceof Error ? error.message : 'Failed to send email',
     };
   }
 };

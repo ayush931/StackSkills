@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prismaClient";
-import { checkRateLimit, comparePassword } from "@/utils/secure";
-import { generateToken } from "@/utils/token";
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prismaClient';
+import { checkRateLimit, comparePassword } from '@/utils/secure';
+import { generateToken } from '@/utils/token';
+import { userLoginSchema } from '@/schema/userSchemaValidation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,27 +14,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, message: 'Invalid JSON or input in request body', error },
         { status: 500 }
-      )
+      );
     }
 
-    const { email, password } = requestBody;
+    let validateData;
 
-    if (!email ||  !password) {
+    try {
+      validateData = userLoginSchema.parse(requestBody);
+    } catch (error) {
       return NextResponse.json(
-        { success: false, message: "All fields are required" },
-        { status: 400 }
-      )
+        { success: false, message: 'Validation failed', error },
+        { status: 401 }
+      );
     }
 
-    const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const { email, password } = validateData;
+
+    if (!email || !password) {
+      return NextResponse.json(
+        { success: false, message: 'All fields are required' },
+        { status: 400 }
+      );
+    }
+
+    const clientIP =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
 
     const rateLimitCheck = checkRateLimit(`login:${email}:${clientIP}`);
 
     if (!rateLimitCheck.allowed) {
       return NextResponse.json(
-        { success: false, message: 'Too many login attempt, Please try again', resetTime: rateLimitCheck.resetTime },
+        {
+          success: false,
+          message: 'Too many login attempt, Please try again',
+          resetTime: rateLimitCheck.resetTime,
+        },
         { status: 429 }
-      )
+      );
     }
 
     const user = await prisma.user.findUnique({
@@ -43,59 +60,59 @@ export async function POST(request: NextRequest) {
         password: true,
         email: true,
         role: true,
-      }
-    })
+      },
+    });
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "User not exists, Please register!!!" },
+        { success: false, message: 'User not exists, Please register!!!' },
         { status: 400 }
-      )
+      );
     }
 
-    const checkPassword = await comparePassword(password, String(user.password))
-    
+    const checkPassword = await comparePassword(password, String(user.password));
+
     if (!checkPassword.success || !checkPassword.isMatch) {
       return NextResponse.json(
-        { success: false, message: "Invalid credentials!!!" },
+        { success: false, message: 'Invalid credentials!!!' },
         { status: 400 }
-      )
+      );
     }
 
     const token = generateToken({
       id: user.id!,
-      role: user.role!
-    })
+      role: user.role!,
+    });
 
     try {
       const testPayload = {
         id: 'test-id',
-        role: 'USER'
-      }
-      generateToken(testPayload)
+        role: 'USER',
+      };
+      generateToken(testPayload);
     } catch (error) {
       return NextResponse.json(
         { success: false, message: 'Authentication failed while creating token', error },
         { status: 401 }
-      )
+      );
     }
 
     const response = NextResponse.json(
-      { success: true, message: "User logged in successfully", user },
+      { success: true, message: 'User logged in successfully', user },
       { status: 200 }
-    )
+    );
 
     response.cookies.set({
-      name: "auth-token",
+      name: 'auth-token',
       value: token,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 30,
-      sameSite: "strict"
-    })
+      sameSite: 'strict',
+    });
 
-    return response
+    return response;
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error })
+    return NextResponse.json({ error: error instanceof Error });
   }
 }

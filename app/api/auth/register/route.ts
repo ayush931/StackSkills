@@ -4,6 +4,7 @@ import { checkRateLimit, hashPassword } from '@/utils/secure';
 import { sendEmail } from '@/utils/nodemailer';
 import verifyEmailTemplate from '@/lib/verifyEmailTemplate';
 import { generateToken } from '@/utils/token';
+import { userRegistrationSchema } from '@/schema/userSchemaValidation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,21 +25,39 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    let validatedData;
+    try {
+      validatedData = userRegistrationSchema.parse(requestBody);
+    } catch (error) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Validation failed',
+          errors: error,
+        },
+        { status: 400 }
+      );
+    }
 
-    const { name, email, password, phone } = requestBody;
+    const { name, email, password, phone } = validatedData;
 
     if (!name || !email || !password || !phone) {
       return NextResponse.json({ success: false, message: 'All fields required' }, { status: 400 });
     }
 
-    const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    const clientIP =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
 
     const rateLimitCheck = checkRateLimit(`register:${clientIP}`);
     if (!rateLimitCheck.allowed) {
       return NextResponse.json(
-        { success: false, message: "Too many registration attempts, Please try later", resetTime: rateLimitCheck.resetTime },
+        {
+          success: false,
+          message: 'Too many registration attempts, Please try later',
+          resetTime: rateLimitCheck.resetTime,
+        },
         { status: 429 }
-      )
+      );
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,7 +82,10 @@ export async function POST(request: NextRequest) {
     const hashResult = await hashPassword(password);
     if (!hashResult.success || !hashResult.hash) {
       return NextResponse.json(
-        { success: false, message: 'Password must have a lowercase, uppercase and special character in it' },
+        {
+          success: false,
+          message: 'Password must have a lowercase, uppercase and special character in it',
+        },
         { status: 500 }
       );
     }
@@ -115,7 +137,7 @@ export async function POST(request: NextRequest) {
         role: true,
         otp: false,
         otpExpiry: true,
-        verifyEmail: true
+        verifyEmail: true,
       },
     });
 
@@ -160,7 +182,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: errorMessage
+        message: errorMessage,
       },
       { status: 500 }
     );

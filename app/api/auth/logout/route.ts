@@ -1,6 +1,6 @@
-import { AuthenticatedRequest } from "@/middleware/authMiddleware";
-import { blacklistToken, verifyToken } from "@/utils/token";
-import { NextResponse } from "next/server";
+import { AuthenticatedRequest } from '@/middleware/authMiddleware';
+import { blacklistToken, verifyToken } from '@/utils/token';
+import { NextResponse } from 'next/server';
 
 export async function GET(request: AuthenticatedRequest) {
   try {
@@ -14,7 +14,7 @@ export async function GET(request: AuthenticatedRequest) {
       return NextResponse.json(
         { success: false, message: 'No authentication provided' },
         { status: 401 }
-      )
+      );
     }
 
     const decode = verifyToken(token);
@@ -23,15 +23,15 @@ export async function GET(request: AuthenticatedRequest) {
       return NextResponse.json(
         { success: false, message: 'Invalid or expired token' },
         { status: 401 }
-      )
+      );
     }
 
-    blacklistToken(decode.jti)
+    blacklistToken(decode.jti);
 
     const response = NextResponse.json(
       { success: true, message: 'Logged out successfully' },
       { status: 200 }
-    )
+    );
 
     response.cookies.set({
       name: 'auth-token',
@@ -40,13 +40,11 @@ export async function GET(request: AuthenticatedRequest) {
       secure: process.env.NODE_ENV === 'production',
       maxAge: 0,
       sameSite: 'strict',
-      path: '/'
-    })
+      path: '/',
+    });
 
     return response;
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error }
-    )
+    return NextResponse.json({ error: error instanceof Error });
   }
 }
