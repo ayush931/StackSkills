@@ -1,11 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismaClient';
 import { checkRateLimit, comparePassword } from '@/utils/secure';
-import { generateToken } from '@/utils/token';
+import { generateToken, verifyToken } from '@/utils/token';
 import { userLoginSchema } from '@/schema/userSchemaValidation';
 
 export async function POST(request: NextRequest) {
   try {
+    let existingToken = request.headers.get('authorization')?.replace('Bearer ', '');
+
+    if (!existingToken) {
+      existingToken = request.cookies.get('auth-token')?.value;
+    }
+
+    if (existingToken) {
+      const decode = verifyToken(existingToken);
+
+      if (decode && decode.role === 'USER') {
+        const existingUser = await prisma.user.findUnique({
+          where: { id: decode.id },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+          },
+        });
+
+        if (existingUser) {
+          return NextResponse.json(
+            { success: false, message: 'User already logged in' },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     let requestBody;
 
     try {
