@@ -32,7 +32,7 @@ export async function GET(request: AuthenticatedRequest) {
       return NextResponse.json(
         { success: false, message: 'Failed to blacklist token', error },
         { status: 400 }
-      )
+      );
     }
 
     const response = NextResponse.json(
@@ -55,7 +55,7 @@ export async function GET(request: AuthenticatedRequest) {
     const response = NextResponse.json(
       { success: false, message: 'An error during logout' },
       { status: 500 }
-    )
+    );
 
     response.cookies.set({
       name: 'auth-token',
@@ -63,7 +63,7 @@ export async function GET(request: AuthenticatedRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 0,
-      sameSite: 'strict'
-    })
+      sameSite: 'strict',
+    });
   }
 }
