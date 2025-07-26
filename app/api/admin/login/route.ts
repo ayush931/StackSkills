@@ -111,7 +111,7 @@ export async function POST(request: AdminAuthenticatedRequest) {
       },
     });
 
-    if (!user) {
+    if (!user || user.role !== 'ADMIN') {
       return NextResponse.json(
         { success: false, message: 'ADMIN does not exists, Please register!!!' },
         { status: 400 }

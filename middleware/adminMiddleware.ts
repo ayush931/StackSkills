@@ -6,6 +6,7 @@ export interface AdminAuthenticatedRequest extends NextRequest {
     id: string;
     role: string;
   };
+  token?: string;
 }
 
 export const authenticateAdmin = (

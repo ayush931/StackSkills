@@ -1,8 +1,8 @@
-import { AuthenticatedRequest } from '@/middleware/authMiddleware';
-import { blacklistToken, verifyToken } from '@/utils/token';
+import { AuthenticatedRequest, authenticateToken } from '@/middleware/authMiddleware';
+import { blacklistToken } from '@/utils/token';
 import { NextResponse } from 'next/server';
 
-export async function GET(request: AuthenticatedRequest) {
+export const GET = authenticateToken(async (request: AuthenticatedRequest) => {
   try {
     let token = request.headers.get('authorization')?.replace('Bearer ', '');
 
@@ -17,17 +17,8 @@ export async function GET(request: AuthenticatedRequest) {
       );
     }
 
-    const decode = verifyToken(token);
-
-    if (!decode || !decode.jti) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
-
     try {
-      blacklistToken(decode.jti);
+      blacklistToken(token);
     } catch (error) {
       return NextResponse.json(
         { success: false, message: 'Failed to blacklist token', error },
@@ -65,5 +56,7 @@ export async function GET(request: AuthenticatedRequest) {
       maxAge: 0,
       sameSite: 'strict',
     });
+
+    return response;
   }
-}
+});

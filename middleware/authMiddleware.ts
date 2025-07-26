@@ -6,6 +6,7 @@ export interface AuthenticatedRequest extends NextRequest {
     id: string;
     role: string;
   };
+  token?: string;
 }
 
 export const authenticateToken = (

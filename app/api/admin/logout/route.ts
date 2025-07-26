@@ -1,8 +1,8 @@
-import { AdminAuthenticatedRequest } from '@/middleware/adminMiddleware';
+import { AdminAuthenticatedRequest, authenticateAdmin } from '@/middleware/adminMiddleware';
 import { blacklistToken, verifyToken } from '@/utils/token';
 import { NextResponse } from 'next/server';
 
-export async function GET(request: AdminAuthenticatedRequest) {
+export const GET = authenticateAdmin(async (request: AdminAuthenticatedRequest) => {
   try {
     let token = request.headers.get('authorization')?.replace('Bearer ', '');
 
@@ -71,5 +71,7 @@ export async function GET(request: AdminAuthenticatedRequest) {
       maxAge: 0,
       sameSite: 'strict',
     });
+
+    return response;
   }
-}
+});
