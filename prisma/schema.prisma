@@ -25,57 +25,55 @@ model User {
   verifyEmail Boolean        @default(false)
   otpExpiry   DateTime
   purchases   UserPurchase[]
-  session     Session[]
-  createAt    DateTime       @default(now())
-}
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
-model Session {
-  id           Int      @id @default(autoincrement())
-  sessionToken String?
-  user         User     @relation(fields: [userId], references: [id])
-  userId       String
-  expiresAt    DateTime
+  @@index([email])
+  @@index([phone])
 }
 
 model UserPurchase {
-  User     User?   @relation(fields: [userId], references: [id])
-  userId   String
-  course   Course? @relation(fields: [courseId], references: [id])
-  courseId Int
+  User        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  course      Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId    Int
+  purchasedAt DateTime @default(now())
+  price       Decimal? @db.Decimal(10, 2)
 
   @@id([userId, courseId])
+  @@index([courseId])
+  @@index([userId])
 }
 
 model Course {
-  id             Int             @id @default(autoincrement())
-  title          String
-  description    String
-  imageUrl       String
-  slug           String
-  openToEveryone Boolean         @default(false)
-  content        CourseContent[]
-  UserPurchase   UserPurchase[]
-}
+  id              Int            @id @default(autoincrement())
+  title           String
+  description     String         @db.Text
+  thumbnail       String
+  price           Decimal        @db.Decimal(10, 2)
+  isPublished     Boolean        @default(false)
+  slug            String         @unique
+  coursePurchased UserPurchase[]
+  content         Content[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-model CourseContent {
-  course    Course?  @relation(fields: [courseId], references: [id])
-  courseId  Int
-  content   Content? @relation(fields: [contentId], references: [id])
-  contentId Int
-
-  @@id([contentId, courseId])
+  @@index([slug])
+  @@index([isPublished])
 }
 
 model Content {
-  id          Int             @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   title       String
   description String
-  thumbnail   String
-  parent      Content?        @relation("ContentToContent", fields: [parentId], references: [id])
-  parentId    Int
-  children    Content[]       @relation("ContentToContent")
-  courses     CourseContent[]
-  createdAt   DateTime        @default(now())
+  imageUrl    String?
+  videoUrl    String?
+  order       Int?    @default(0)
+  course      Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId    Int?
+  isPublished Boolean @default(false)
+
+  @@index([courseId])
 }
 
 enum Role {
