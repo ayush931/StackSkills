@@ -62,6 +62,17 @@ export const courseCreationSchema = z.object({
   thumbnail: thumbnailSchema,
   price: priceSchema,
   slug: slugSchema,
+  adminToken: z.string()
+    .min(5, 'ADMIN token must be at least 5 characters long')
+    .max(50, 'ADMIN token must not exceed 50 characters')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/\d/, 'Password must contain at least one number')
+    .regex(
+      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/,
+      'Password must contain at least one special character'
+    )
+    .trim(),
   isPublished: z.boolean().optional().default(false),
   content: z
     .array(contentItemSchema)
