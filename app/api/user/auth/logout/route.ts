@@ -44,7 +44,7 @@ export const GET = authenticateToken(async (request: AuthenticatedRequest) => {
     return response;
   } catch (error) {
     const response = NextResponse.json(
-      { success: false, message: 'An error during logout' },
+      { success: false, message: 'An error during logout', error },
       { status: 500 }
     );
 
