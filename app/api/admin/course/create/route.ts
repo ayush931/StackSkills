@@ -14,7 +14,7 @@ export const POST = authenticateAdmin(async (request: AdminAuthenticatedRequest)
       );
     }
 
-    const ADMIN_TOKEN = process.env.ADMIN_OPERATION_TOKEN
+    const ADMIN_TOKEN = process.env.ADMIN_OPERATION_TOKEN;
 
     let requestBody;
 
@@ -27,10 +27,15 @@ export const POST = authenticateAdmin(async (request: AdminAuthenticatedRequest)
       );
     }
 
+    const requestWithToken = {
+      ...requestBody,
+      adminToken: requestBody.adminToken,
+    };
+
     let validateData;
 
     try {
-      validateData = courseCreationSchema.parse(requestBody);
+      validateData = courseCreationSchema.parse(requestWithToken);
     } catch (error) {
       return NextResponse.json(
         { success: false, message: 'Validation failed', error },
@@ -38,13 +43,14 @@ export const POST = authenticateAdmin(async (request: AdminAuthenticatedRequest)
       );
     }
 
-    const { title, description, thumbnail, price, slug, isPublished, content, adminToken } = validateData;
+    const { title, description, thumbnail, price, slug, isPublished, content, adminToken } =
+      validateData;
 
     if (ADMIN_TOKEN !== adminToken) {
       return NextResponse.json(
         { success: false, message: 'Give correct admin token to create course' },
         { status: 401 }
-      )
+      );
     }
 
     if (!title || !description || !thumbnail || !price || !slug) {

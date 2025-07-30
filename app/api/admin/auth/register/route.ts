@@ -35,9 +35,14 @@ export const POST = authenticateAdmin(async (request: AdminAuthenticatedRequest)
       );
     }
 
+    const requestWithToken = {
+      ...requestBody,
+      adminToken: requestBody.adminToken,
+    };
+
     let validateData;
     try {
-      validateData = adminRegistrationSchema.parse(requestBody);
+      validateData = adminRegistrationSchema.parse(requestWithToken);
     } catch (error) {
       return NextResponse.json(
         { success: false, message: 'Validation failed', error },

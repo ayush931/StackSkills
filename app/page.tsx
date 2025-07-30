@@ -1,3 +1,11 @@
+import HomeLayout from "@/layout/HomeLayout";
+
 export default function Home() {
-  return <div>LMS frontpage</div>;
+  return (
+    <div>
+      <HomeLayout>
+        Main Page
+      </HomeLayout>
+    </div>
+  );
 }

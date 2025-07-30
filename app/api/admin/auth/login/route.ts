@@ -54,10 +54,15 @@ export async function POST(request: AdminAuthenticatedRequest) {
       );
     }
 
+    const requestWithToken = {
+      ...requestBody,
+      adminToken: requestBody.adminToken,
+    };
+
     let validateData;
 
     try {
-      validateData = adminLoginSchema.parse(requestBody);
+      validateData = adminLoginSchema.parse(requestWithToken);
     } catch (error) {
       return NextResponse.json(
         { success: false, message: 'Validation failed', error },
